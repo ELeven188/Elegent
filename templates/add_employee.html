@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}添加員工 - 假期管理系統{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fas fa-user-plus me-2"></i>添加新員工</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('submit_employee') }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">姓名 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="employee_id" class="form-label">員工編號 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="employee_id" name="employee_id" required>
+                                <div class="form-text">例如：EMP001, EMP002 等</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">郵箱 <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="department" class="form-label">部門 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="department" name="department" required>
+                                    <option value="">請選擇部門</option>
+                                    <option value="技術部">技術部</option>
+                                    <option value="市場部">市場部</option>
+                                    <option value="人事部">人事部</option>
+                                    <option value="財務部">財務部</option>
+                                    <option value="銷售部">銷售部</option>
+                                    <option value="運營部">運營部</option>
+                                    <option value="客服部">客服部</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="hire_date" class="form-label">入職日期 <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="hire_date" name="hire_date" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>默認假期配額</h6>
+                        <ul class="mb-0">
+                            <li><strong>年假：</strong>14 天/年</li>
+                            <li><strong>有薪病假：</strong>30 天/年</li>
+                            <li><strong>無薪請假：</strong>無限制</li>
+                        </ul>
+                        <small class="text-muted">添加員工後可以在系統中調整個人配額</small>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>返回列表
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus me-1"></i>添加員工
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 設置入職日期最大值為今天
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('hire_date').max = today;
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}員工列表 - 假期管理系統{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-users me-2"></i>員工列表</h2>
+            <a href="{{ url_for('add_employee_form') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>添加員工
+            </a>
+        </div>
+
+        {% if employees %}
+            <div class="row">
+                {% for employee in employees %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-user me-2"></i>{{ employee.name }}
+                                </h5>
+                                <p class="card-text">
+                                    <small class="text-muted">員工編號：{{ employee.employee_id }}</small><br>
+                                    <small class="text-muted">部門：{{ employee.department }}</small><br>
+                                    <small class="text-muted">入職日期：{{ employee.hire_date.strftime('%Y-%m-%d') }}</small>
+                                </p>
+                                <div class="mb-3">
+                                    <span class="badge bg-info me-1">年假：{{ employee.annual_leave_quota }}天</span>
+                                    <span class="badge bg-success">病假：{{ employee.sick_leave_quota }}天</span>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('employee_detail', employee_id=employee.id) }}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>查看詳情
+                                    </a>
+                                    <a href="{{ url_for('request_vacation_form', employee_id=employee.id) }}" 
+                                       class="btn btn-primary btn-sm">
+                                        <i class="fas fa-calendar-plus me-1"></i>申請假期
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">尚無員工資料</h4>
+                <p class="text-muted">請先添加員工資料</p>
+                <a href="{{ url_for('add_employee_form') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>添加第一位員工
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

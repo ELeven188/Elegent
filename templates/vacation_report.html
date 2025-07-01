@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}假期報告 - {{ current_year }}年{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-chart-bar me-2"></i>假期報告 - {{ current_year }}年</h2>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>返回首頁
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if report_data %}
+    <div class="row mb-4">
+        <!-- 統計卡片 -->
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ report_data|length }}</h4>
+                            <p class="mb-0">總員工數</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ report_data|sum(attribute='annual_used') }}</h4>
+                            <p class="mb-0">已用年假總天數</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ report_data|sum(attribute='sick_used') }}</h4>
+                            <p class="mb-0">已用病假總天數</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-injured fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ report_data|sum(attribute='unpaid_used') }}</h4>
+                            <p class="mb-0">無薪假總天數</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar-times fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 詳細報告表格 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i>員工假期使用詳情</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>員工姓名</th>
+                            <th>部門</th>
+                            <th>年假</th>
+                            <th>有薪病假</th>
+                            <th>無薪請假</th>
+                            <th>年假使用率</th>
+                            <th>病假使用率</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in report_data %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('employee_detail', employee_id=data.employee.id) }}" 
+                                       class="text-decoration-none">
+                                        <i class="fas fa-user me-1"></i>{{ data.employee.name }}
+                                    </a>
+                                </td>
+                                <td>{{ data.employee.department }}</td>
+                                <td>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>{{ data.annual_used }} / {{ data.employee.annual_leave_quota }}</span>
+                                        <span class="badge bg-{{ 'success' if data.annual_remaining > 5 else 'warning' if data.annual_remaining > 0 else 'danger' }}">
+                                            剩餘 {{ data.annual_remaining }}
+                                        </span>
+                                    </div>
+                                    <div class="progress mt-1" style="height: 6px;">
+                                        <div class="progress-bar bg-info" 
+                                             style="width: {{ (data.annual_used / data.employee.annual_leave_quota * 100) if data.employee.annual_leave_quota > 0 else 0 }}%">
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>{{ data.sick_used }} / {{ data.employee.sick_leave_quota }}</span>
+                                        <span class="badge bg-{{ 'success' if data.sick_remaining > 10 else 'warning' if data.sick_remaining > 0 else 'danger' }}">
+                                            剩餘 {{ data.sick_remaining }}
+                                        </span>
+                                    </div>
+                                    <div class="progress mt-1" style="height: 6px;">
+                                        <div class="progress-bar bg-success" 
+                                             style="width: {{ (data.sick_used / data.employee.sick_leave_quota * 100) if data.employee.sick_leave_quota > 0 else 0 }}%">
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if data.unpaid_used > 0 %}
+                                        <span class="badge bg-warning text-dark">{{ data.unpaid_used }} 天</span>
+                                    {% else %}
+                                        <span class="text-muted">未使用</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set annual_rate = (data.annual_used / data.employee.annual_leave_quota * 100) if data.employee.annual_leave_quota > 0 else 0 %}
+                                    <span class="fw-bold text-{{ 'danger' if annual_rate > 80 else 'warning' if annual_rate > 60 else 'success' }}">
+                                        {{ "%.1f"|format(annual_rate) }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    {% set sick_rate = (data.sick_used / data.employee.sick_leave_quota * 100) if data.employee.sick_leave_quota > 0 else 0 %}
+                                    <span class="fw-bold text-{{ 'danger' if sick_rate > 50 else 'warning' if sick_rate > 30 else 'success' }}">
+                                        {{ "%.1f"|format(sick_rate) }}%
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 圖表區域（可選） -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>假期使用情況統計</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>年假使用情況分佈</h6>
+                            {% set high_usage = report_data|selectattr('annual_used', 'gt', (data.employee.annual_leave_quota * 0.8))|list|length %}
+                            {% set medium_usage = report_data|selectattr('annual_used', 'gt', (data.employee.annual_leave_quota * 0.5))|selectattr('annual_used', 'le', (data.employee.annual_leave_quota * 0.8))|list|length %}
+                            {% set low_usage = report_data|length - high_usage - medium_usage %}
+                            <ul class="list-unstyled">
+                                <li><span class="badge bg-danger me-2">高使用率 (>80%)</span>{{ high_usage }} 人</li>
+                                <li><span class="badge bg-warning me-2">中等使用率 (50-80%)</span>{{ medium_usage }} 人</li>
+                                <li><span class="badge bg-success me-2">低使用率 (<50%)</span>{{ low_usage }} 人</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>病假使用情況分佈</h6>
+                            {% set high_sick = report_data|selectattr('sick_used', 'gt', 15)|list|length %}
+                            {% set medium_sick = report_data|selectattr('sick_used', 'gt', 5)|selectattr('sick_used', 'le', 15)|list|length %}
+                            {% set low_sick = report_data|length - high_sick - medium_sick %}
+                            <ul class="list-unstyled">
+                                <li><span class="badge bg-danger me-2">高使用 (>15天)</span>{{ high_sick }} 人</li>
+                                <li><span class="badge bg-warning me-2">中等使用 (5-15天)</span>{{ medium_sick }} 人</li>
+                                <li><span class="badge bg-success me-2">低使用 (<5天)</span>{{ low_sick }} 人</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>無薪假期使用</h6>
+                            {% set unpaid_users = report_data|selectattr('unpaid_used', 'gt', 0)|list|length %}
+                            <ul class="list-unstyled">
+                                <li><span class="badge bg-warning text-dark me-2">有使用</span>{{ unpaid_users }} 人</li>
+                                <li><span class="badge bg-success me-2">未使用</span>{{ report_data|length - unpaid_users }} 人</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">暫無報告數據</h4>
+        <p class="text-muted">請先添加員工和假期申請記錄</p>
+        <a href="{{ url_for('add_employee_form') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>添加員工
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}{{ employee.name }} - 員工詳情{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-user me-2"></i>{{ employee.name }}</h2>
+            <div>
+                <a href="{{ url_for('request_vacation_form', employee_id=employee.id) }}" class="btn btn-primary">
+                    <i class="fas fa-calendar-plus me-1"></i>申請假期
+                </a>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>返回列表
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 員工基本信息 -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-id-card me-2"></i>基本信息</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>員工編號：</strong>{{ employee.employee_id }}</p>
+                <p><strong>郵箱：</strong>{{ employee.email }}</p>
+                <p><strong>部門：</strong>{{ employee.department }}</p>
+                <p><strong>入職日期：</strong>{{ employee.hire_date.strftime('%Y-%m-%d') }}</p>
+            </div>
+        </div>
+
+        <!-- 假期配額 -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>{{ current_year }}年假期配額</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>年假：</span>
+                        <span class="fw-bold text-info">剩餘 {{ remaining_annual }} / {{ employee.annual_leave_quota }} 天</span>
+                    </div>
+                    <div class="progress mt-1">
+                        <div class="progress-bar bg-info" style="width: {{ (remaining_annual / employee.annual_leave_quota * 100) if employee.annual_leave_quota > 0 else 0 }}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>有薪病假：</span>
+                        <span class="fw-bold text-success">剩餘 {{ remaining_sick }} / {{ employee.sick_leave_quota }} 天</span>
+                    </div>
+                    <div class="progress mt-1">
+                        <div class="progress-bar bg-success" style="width: {{ (remaining_sick / employee.sick_leave_quota * 100) if employee.sick_leave_quota > 0 else 0 }}%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex justify-content-between">
+                        <span>無薪請假：</span>
+                        <span class="fw-bold text-warning">無限制</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 假期申請記錄 -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>假期申請記錄</h5>
+            </div>
+            <div class="card-body">
+                {% if vacation_requests %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>假期類型</th>
+                                    <th>開始日期</th>
+                                    <th>結束日期</th>
+                                    <th>天數</th>
+                                    <th>狀態</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in vacation_requests %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge {{ 'badge-paid bg-success' if request.is_paid else 'badge-unpaid bg-warning text-dark' }}">
+                                                {{ request.vacation_type_chinese }}
+                                            </span>
+                                        </td>
+                                        <td>{{ request.start_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ request.end_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ request.days }}</td>
+                                        <td>
+                                            {% if request.status == 'pending' %}
+                                                <span class="status-pending"><i class="fas fa-clock me-1"></i>待審核</span>
+                                            {% elif request.status == 'approved' %}
+                                                <span class="status-approved"><i class="fas fa-check-circle me-1"></i>已批准</span>
+                                            {% else %}
+                                                <span class="status-rejected"><i class="fas fa-times-circle me-1"></i>已拒絕</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if request.status == 'pending' %}
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{{ url_for('approve_vacation', request_id=request.id) }}" 
+                                                       class="btn btn-success btn-sm"
+                                                       onclick="return confirm('確定要批准這個假期申請嗎？')">
+                                                        <i class="fas fa-check"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('reject_vacation', request_id=request.id) }}" 
+                                                       class="btn btn-danger btn-sm"
+                                                       onclick="return confirm('確定要拒絕這個假期申請嗎？')">
+                                                        <i class="fas fa-times"></i>
+                                                    </a>
+                                                </div>
+                                            {% else %}
+                                                <small class="text-muted">
+                                                    {% if request.approved_by %}
+                                                        由 {{ request.approved_by }} 於 {{ request.approved_at.strftime('%Y-%m-%d') }} 處理
+                                                    {% endif %}
+                                                </small>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% if request.reason %}
+                                        <tr class="table-light">
+                                            <td colspan="6">
+                                                <small><strong>申請原因：</strong>{{ request.reason }}</small>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">暫無假期申請記錄</h5>
+                        <p class="text-muted">這位員工還沒有提交過假期申請</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

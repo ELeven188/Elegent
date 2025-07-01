@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}申請假期 - {{ employee.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-calendar-plus me-2"></i>申請假期 - {{ employee.name }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('submit_vacation_request') }}">
+                    <input type="hidden" name="employee_id" value="{{ employee.id }}">
+                    
+                    <div class="mb-3">
+                        <label for="vacation_type" class="form-label">假期類型 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="vacation_type" name="vacation_type" required>
+                            <option value="">請選擇假期類型</option>
+                            {% for type_id, type_name in vacation_types %}
+                                <option value="{{ type_id }}">{{ type_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            <small>
+                                <i class="fas fa-info-circle me-1"></i>
+                                <strong>有薪病假</strong>：因病需要休假時使用，有工資支付<br>
+                                <strong>無薪請假</strong>：個人事務或其他原因休假，無工資支付<br>
+                                <strong>年假</strong>：享有的年度帶薪假期
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="start_date" class="form-label">開始日期 <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="end_date" class="form-label">結束日期 <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">申請原因</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" 
+                                  placeholder="請說明申請假期的原因（可選）"></textarea>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>假期配額提醒</h6>
+                        <ul class="mb-0">
+                            <li><strong>年假：</strong>每年 {{ employee.annual_leave_quota }} 天</li>
+                            <li><strong>有薪病假：</strong>每年 {{ employee.sick_leave_quota }} 天</li>
+                            <li><strong>無薪請假：</strong>無限制</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('employee_detail', employee_id=employee.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>取消
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i>提交申請
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 設置最小日期為今天
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('start_date').min = today;
+        document.getElementById('end_date').min = today;
+        
+        // 當開始日期變更時，更新結束日期的最小值
+        document.getElementById('start_date').addEventListener('change', function() {
+            document.getElementById('end_date').min = this.value;
+        });
+    });
+</script>
+{% endblock %}
